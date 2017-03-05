@@ -1,0 +1,33 @@
+= AWS Playground
+
+A small sample-project as a playground for Amazon EC2 Container Service (ECS).
+
+== How to build and deploy locally
+
+----
+mvn clean package
+docker build -t de.dplatz/aws-playground .
+docker run -p 8080:8080 de.dplatz/aws-playground
+----
+
+You should be able to access the rest-resource of the app now:
+
+----
+curl -i http://192.168.99.100:8080/aws-playground/playground/greetings/daniel
+----
+
+NOTE: I am running boot2docker so my docker-host is not on localhost.
+
+== How to deploy on ECS?
+
+Do the same `mvn clean package` and `docker build` steps as before.
+
+If you have signed up for AWS and created a docker-repository with the name `de.dplatz/aws-playground`, you will get a page with all the steps and coordinates for `docker login`, `docker tag` and `docker push`.
+
+----
+aws ecr get-login --region eu-central-1 // will give you the docker login command/credentials
+docker tag de.dplatz/aws-playground:latest <my-aws-url>/de.dplatz/aws-playground:latest
+docker push <my-aws-url>/de.dplatz/aws-playground:latest
+----
+
+TODO: aws console commands to define/update taks and start/stop instance
