@@ -1,0 +1,86 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: aws-playground-app
+spec:
+  replicas: 4
+  selector:
+    matchLabels:
+      app: aws-playground-app
+  template:
+    metadata:
+      name: aws-playground-app
+      labels:
+        app: aws-playground-app
+    spec:
+      containers:
+      - image: ${ECR_REPOSITORY}/app:latest
+        imagePullPolicy: Always
+        name: aws-playground-app
+        readinessProbe:
+          httpGet:
+            path: /hello
+            port: 8080
+          failureThreshold: 20
+          periodSeconds: 30
+        env:
+        - name: TEST
+          value: VALUE
+        ports:
+        - name: http
+          containerPort: 8080
+        resources:
+          limits:
+            cpu: 1.0
+            memory: 0.2Gi
+          requests:
+            cpu: 0.5
+            memory: 0.2Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: service-aws-playground-app
+spec:
+  ports:
+    - port: 8080
+      targetPort: 8080
+      protocol: TCP
+  type: NodePort
+  selector:
+    app: aws-playground-app
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ingress-aws-playground
+  labels:
+    app: aws-playground-app
+  annotations:
+    # Ingress Core Settings
+    kubernetes.io/ingress.class: "alb"
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+    # https://docs.aws.amazon.com/elasticloadbalancing/latest/application/load-balancer-target-groups.html#target-group-attributes
+    alb.ingress.kubernetes.io/target-group-attributes: stickiness.enabled=true,stickiness.type=app_cookie,stickiness.app_cookie.cookie_name=name
+
+    # Health Check Settings
+    alb.ingress.kubernetes.io/healthcheck-protocol: HTTP 
+    alb.ingress.kubernetes.io/healthcheck-port: traffic-port
+    alb.ingress.kubernetes.io/healthcheck-path: /hello
+    alb.ingress.kubernetes.io/healthcheck-interval-seconds: '15'
+    alb.ingress.kubernetes.io/healthcheck-timeout-seconds: '5'
+    alb.ingress.kubernetes.io/success-codes: '200'
+    alb.ingress.kubernetes.io/healthy-threshold-count: '2'
+    alb.ingress.kubernetes.io/unhealthy-threshold-count: '2'
+spec:
+  rules:
+    - http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: service-aws-playground-app
+                port:
+                    number: 8080

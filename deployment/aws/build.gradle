@@ -1,0 +1,20 @@
+plugins {
+    id 'application' 
+}
+apply plugin: 'project-report'
+
+
+repositories {
+    mavenCentral() 
+}
+
+dependencies {
+    implementation "software.amazon.awscdk:aws-cdk-lib:2.94.0"
+    implementation "software.amazon.awssdk:iam:2.20.149"
+    implementation "software.amazon.awssdk:sts:2.20.149"
+
+}
+
+application {
+    mainClass = 'de.dplatz.CDKApp'
+}
