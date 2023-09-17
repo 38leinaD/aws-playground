@@ -23,10 +23,10 @@ public class TestResource {
     @GET
     @Path("session")
     @Produces(MediaType.TEXT_PLAIN)
-    public Response session(@CookieParam("name") Cookie cookie) {
+    public Response session(@CookieParam("mycookie") Cookie cookie) {
         String podName = System.getenv("HOSTNAME");
         if (cookie == null) {
-            NewCookie newCookie = new NewCookie("name", podName);
+            NewCookie newCookie = new NewCookie("mycookie", podName);
             return Response.ok("Created cookie for " + podName).cookie(newCookie).build();
         }
         else {
